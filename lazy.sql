@@ -90,7 +90,7 @@ as $$
   begin
     update lazy.account_balances_mat
     set expiration_time = '-Infinity'
-    where name in (old.name, new.name);
+    where name in (old.name, new.name)
       and expiration_time <> '-Infinity';
     raise notice 'whats up';
     return new;
