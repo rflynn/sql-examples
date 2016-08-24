@@ -38,4 +38,3 @@ else
 fi
 
 docker stop postgresql
-

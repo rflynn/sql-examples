@@ -10,6 +10,7 @@ drop table if exists transactions;
 drop schema if exists lazy cascade;
 */
 
+/*
 drop schema if exists test_list_deps cascade;
 create schema test_list_deps;
 
@@ -33,6 +34,7 @@ drop materialized view if exists test_list_deps.m3 cascade;
 create materialized view test_list_deps.m1 as select * from test_list_deps.t;
 create materialized view test_list_deps.m2 as select * from test_list_deps.m1;
 create materialized view test_list_deps.m3 as select * from test_list_deps.m2;
+*/
 
 WITH RECURSIVE
 schemas AS (
