@@ -27,9 +27,6 @@ schedulable as (
     -- for each day, figure out the next schedulable day
     select
         dows.d,
-        dows.dow,
-        dows.is_weekend,
-        dows.is_holiday,
         (select min(s.d) from dows s where s.d >= dows.d and not s.is_weekend and not s.is_holiday) as next_business_day
     from dows
 ),
@@ -40,10 +37,9 @@ some_naive_monthly_schedule (d, n) as (
     -- as months with fewer days like feb will trim the 31st down to 28th for all subsequent months
     select '2016-10-31'::date, 1
     union all
-    select ('2016-10-31'::date + (interval '1 month' * n))::date, n + 1
-    from some_naive_monthly_schedule where n < 12
+    select ('2016-10-31'::date + (interval '1 month' * n))::date, n + 1 from some_naive_monthly_schedule where n < 12
 ),
-some_naive_monthly_schedule_adjusted as (
+monthly_schedule_adjusted as (
     -- translate each naive day to the next scheduable day
     select
         snms.d,
@@ -51,4 +47,4 @@ some_naive_monthly_schedule_adjusted as (
     from some_naive_monthly_schedule snms
     left join schedulable s on s.d = snms.d
 )
-select * from some_naive_monthly_schedule_adjusted;
+select * from monthly_schedule_adjusted;
