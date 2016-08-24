@@ -6,6 +6,7 @@ select nsp.nspname as object_schema,
          when 'i' then 'INDEX'
          when 'S' then 'SEQUENCE'
          when 'v' then 'VIEW'
+         when 'm' then 'MATVIEW'
          when 'c' then 'TYPE'
          else cls.relkind::text
        end as object_type

@@ -6,14 +6,15 @@ set -o xtrace
 set -o errexit
 set -o pipefail
 
+which docker-machine && eval $(docker-machine env)
 
-cleanup() {
+cleanup()
+{
     docker stop postgresql
 }
 trap cleanup EXIT
 
-which docker-machine && eval $(docker-machine env)
-docker-machine ip default # ensure this doesn't crash
+docker stop postgresql || true
 
 docker run \
     --name postgresql \
@@ -24,6 +25,17 @@ docker run \
     --env 'DB_USER=dbuser' --env 'DB_PASS=dbuserpass' \
     sameersbn/postgresql:9.4-21 &
 
-until nc -w 0 $(docker-machine ip default) 5432 || [ $SECONDS -gt 10 ]; do sleep 1; done
-docker exec -i postgresql sudo -u postgres psql -a < $1
+while [ $SECONDS -lt 10 ] && ! docker exec -i postgresql sudo -u postgres psql < <(echo select 1) &> /dev/null
+do
+    sleep 1
+done
+
+if [ $# -gt 0 ]
+then
+    docker exec -i postgresql sudo -u postgres psql -a < $1
+else
+    docker exec -i postgresql sudo -u postgres psql
+fi
+
+docker stop postgresql
 
