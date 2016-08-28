@@ -9,7 +9,7 @@ federal_holidays (date, descr) as (
         -- ...
 ),
 every_day as (
-    -- list every date between some finite date range
+    -- list every date the app will consider
     select '2016-08-24'::date as d
     union all
     select (d + interval '1 day')::date from every_day where d < '2018-01-01'::date
@@ -24,31 +24,27 @@ dows as (
     from every_day
 ),
 schedulable as (
-    -- for each day, figure out the prev/next schedulable day
+    -- for each day, figure out the next schedulable day
     select
         dows.d,
-        dows.dow,
-        dows.is_weekend,
-        dows.is_holiday,
-        (select min(s.d) from dows s where s.d >= dows.d and not s.is_weekend and not s.is_holiday) as next_schedulable
+        (select min(s.d) from dows s where s.d >= dows.d and not s.is_weekend and not s.is_holiday) as next_business_day
     from dows
 ),
 some_naive_monthly_schedule (d, n) as (
-    -- given a starting date, calculate the next N naive dates
-    -- use the 31st of the month as a test as it doesn't exist in many months and gives the least-intuitive results
+    -- given a starting date, calculate subsequent naive dates
+    -- use the 31st of the month as a test as it doesn't exist in many months and gives the least intuitive results
     -- NOTE: use (starting_date + n months) instead of (last_date + 1 month),
     -- as months with fewer days like feb will trim the 31st down to 28th for all subsequent months
     select '2016-10-31'::date, 1
     union all
-    select ('2016-10-31'::date + (interval '1 month' * n))::date, n + 1
-    from some_naive_monthly_schedule where n <= 12
+    select ('2016-10-31'::date + (interval '1 month' * n))::date, n + 1 from some_naive_monthly_schedule where n < 12
 ),
-some_naive_monthly_shedule_adjusted as (
+monthly_schedule_adjusted as (
     -- translate each naive day to the next scheduable day
     select
         snms.d,
-        s.next_schedulable
+        s.next_business_day
     from some_naive_monthly_schedule snms
     left join schedulable s on s.d = snms.d
 )
-select * from some_naive_monthly_shedule_adjusted;
+select * from monthly_schedule_adjusted;
