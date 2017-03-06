@@ -5,7 +5,7 @@ federal_holidays (date, descr) as (
         ('2016-10-10'::date, 'Columbus Day'    ),
         ('2016-11-11'::date, 'Veterans Day'    ),
         ('2016-11-24'::date, 'Thanksgiving Day'),
-        ('2016-12-26'::date, 'Christmas Day'   )
+        ('2016-12-25'::date, 'Christmas Day'   )
         -- ...
 ),
 every_day as (
