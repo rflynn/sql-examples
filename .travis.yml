@@ -16,3 +16,4 @@ matrix:
             - postgresql-9.5
       before_install:
         - make test
+
