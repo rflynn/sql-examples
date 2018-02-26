@@ -119,13 +119,34 @@ select assert_equals('foo'::name, 'foo'::name);
 select assert_equals('{}'::jsonb, '{}'::jsonb);
 select assert_equals('{"a":1,"b":2}'::jsonb, '{"b":2,"a":1}'::jsonb);
 
+-- inside a CTE
+select assert_raises('with foo as (select assert_equals(true, false)) select * from foo',
+                     'assert_equals failed: t != f');
 
+-- values
+select assert_equals((values(1)),
+                     (values(1)));
+
+
+with foo as (select * from (values(1, 2),(2, 3)) _(x,y))
+select assert_equals(foo.x + 1, foo.y) from foo;
+
+-- check different ways of defining [1,2,3,4,5]
+with recursive
+a12345 as (select 1 n union all select n + 1 from a12345 where n < 5),
+b12345 as (select n from (values(1), (2), (3), (4), (5)) _(n)),
+a_check_count as (select assert_equals((select count(*)::int from a12345), 5)),
+b_check_count as (select assert_equals((select count(*)::int from b12345), 5))
+select assert_equals(a.n, b.n) check_values from a12345 a join b12345 b on a=b;
+
+
+-- select 0/0;
 
 select assert_raises('select assert_equals(0, 1)'::text);
 select assert_raises('select assert_raises(assert_equals(1, 2))'::text);
 
 select assert_raises('select assert_raises(''select 0 / 0''::text, ''wrong exception''::text)'::text,
-                            'unexpected exception'::text);
+                     'unexpected exception'::text);
 
 select assert_raises('select assert_equals(now()::date::text, now()::date)',
                      'function assert_equals(text, date) does not exist'::text);
@@ -172,5 +193,9 @@ select assert_not_equals(false, true);
 select assert_not_equals(1, 2);
 
 select assert_raises('select assert_not_equals(0, 0)', 'assert_not_equals failed');
+
+-- values
+select assert_not_equals((values(0)),
+                         (values(1)));
 
 commit;
