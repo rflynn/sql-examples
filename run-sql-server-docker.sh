@@ -15,24 +15,26 @@ docker ps --filter name=sql1 | grep sql1 >/dev/null || \
         -p 1401:1433 \
         -d microsoft/mssql-server-linux:2017-latest
 
-# run query
-docker exec -t sql1 /bin/bash -c '/opt/mssql-tools/bin/sqlcmd -S localhost -U SA -P "<YourStrong!Passw0rd>" -Q "select 1"'
+# run query, show we can correctly run arbitrary SQL -- escaping ' sucks though :-(
+docker exec -it sql1 /bin/bash -c '/opt/mssql-tools/bin/sqlcmd -S localhost -U SA -P "<YourStrong!Passw0rd>" -Q "
+IF db_id('"'"'TestDB'"'"') IS NULL
+BEGIN
+    CREATE DATABASE [TestDB]
+END
 
-# from example, unimplemented
-<<'EOS'
-CREATE DATABASE TestDB
-SELECT Name from sys.Databases
-GO
-
+-- SELECT Name from sys.Databases
 USE TestDB
-CREATE TABLE Inventory (id INT, name NVARCHAR(50), quantity INT)
-INSERT INTO Inventory VALUES (1, 'banana', 150);
-INSERT INTO Inventory VALUES (2, 'orange', 154);
 GO
 
-SELECT * FROM Inventory WHERE quantity > 152;
+IF NOT EXISTS (SELECT 1 FROM sysobjects WHERE name='"'"'Inventory'"'"' AND xtype='"'"'U'"'"')
+BEGIN
+    CREATE TABLE Inventory (id INT, name NVARCHAR(50), quantity INT);
+    INSERT INTO Inventory VALUES (1, '"'"'banana'"'"', 150);
+    INSERT INTO Inventory VALUES (2, '"'"'orange'"'"', 154);
+END
 GO
 
-QUIT
-EOS
+SELECT * FROM Inventory WHERE quantity > 152
+GO
 
+QUIT"'
